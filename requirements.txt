@@ -1,0 +1,10 @@
+yfinance
+matplotlib
+pandas
+seaborn
+numpy
+statsmodels
+scipy
+patsy
+scikit-learn
+torch
