@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[162]:
+# In[1]:
 
 
 from main_script_ready import (load_finance_data,
@@ -41,7 +41,7 @@ import inspect
 warnings.filterwarnings("ignore")
 
 
-# In[163]:
+# In[2]:
 
 
 def load_finance_data(ticker1, ticker2):
@@ -86,7 +86,11 @@ def load_finance_data(ticker1, ticker2):
 
     return processed_data
 
-# In[165]:
+price_data = load_finance_data('AMZN','TSLA')
+price_data
+
+
+# In[3]:
 
 
 def run_pair_trading_model(ticker1, ticker2):
@@ -113,6 +117,12 @@ def run_pair_trading_model(ticker1, ticker2):
     return coin_test
 
 
+# In[4]:
+
+
+test = run_pair_trading_model(ticker1='TSLA',ticker2='AMZN')
+
+
 # In[166]:
 
 
@@ -129,21 +139,21 @@ def health_check():
 
 @app.get("/predict")
 def get_prediction(ticker1: str, ticker2: str):
-    try:
-        # Your function runs using whatever tickers the user types into the URL
-        result = run_pair_trading_model(ticker1, ticker2)
-        
-        return {
-            "status": "success",
-            "inputs": {
-                "ticker1": ticker1,
-                "ticker2": ticker2
-            },
-            "result": result  # Matches the 'result' variable above
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred during inference: {str(e)}")
+    
+    print("Received:", ticker1, ticker2)
+
+    result = run_pair_trading_model(ticker1, ticker2)
+
+    print("Result:", result)
+
+    return {
+        "status": "success",
+        "inputs": {
+            "ticker1": ticker1,
+            "ticker2": ticker2
+        },
+        "result": result
+    }
 
 
 # In[ ]:
@@ -151,8 +161,4 @@ def get_prediction(ticker1: str, ticker2: str):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-
-
-
-
 
