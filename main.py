@@ -86,10 +86,6 @@ def load_finance_data(ticker1, ticker2):
 
     return processed_data
 
-price_data = load_finance_data('AMZN','TSLA')
-price_data
-
-
 # In[165]:
 
 
@@ -156,8 +152,6 @@ def get_prediction(ticker1: str, ticker2: str):
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
 
-
-# In[ ]:
 
 
 
