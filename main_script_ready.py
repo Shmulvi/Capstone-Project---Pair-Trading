@@ -7,12 +7,39 @@ import datetime
 from itertools import combinations
 import statsmodels.api as sm  
 import warnings
+def load_finance_data(ticker1,ticker2):
+    df = yf.download(
+        [ticker1,ticker2],
+        start="2020-01-01",
+        end="2026-01-01",
+        auto_adjust=False
+    )
+    df = time_split_relocate(df)
+
+    # Convert MultiIndex columns into original naming convention
+    processed_data = pd.DataFrame()
+
+    for col in df.columns:
+        if isinstance(col, tuple):
+            column_name = "-".join(
+                str(x) for x in col if x not in ("", None)
+            )
+        else:
+            column_name = str(col)
+
+        processed_data[column_name] = df[col]
+
+    # Set Date as index, retaining the original structure
+    processed_data.index = pd.to_datetime(processed_data["Date"])
+    processed_data = processed_data.drop(columns=["Date"])
+
+    return processed_data
 def time_split_relocate(dataframe):
     dataframe['Date'] = pd.to_datetime(dataframe['Date'])
     dataframe['Month'] = dataframe['Date'].dt.month
     dataframe['Year'] = dataframe['Date'].dt.year
     dataframe['Quarter'] = dataframe['Date'].dt.quarter
-    dataframe = dataframe.iloc[:,[0,6,7,8,1,2,3,4,5]]
+    dataframe = dataframe.iloc[:,[0,11,12,13,1,2,3,4,5,6,7,8,9,10]]
 
     return dataframe
 def merging_data(df1,df2,df3,df4,df5,df6,df7,df8):
@@ -77,79 +104,64 @@ def pairing(dataframe):
         pairings.append(pair_df)
     
     return pairings
-def ols_loop(pairing_dict, pairing_list):
+def ols_loop(pair, ticker1, ticker2):
 
-    models = {}
-    
-    for i in pairing_list:
-        pair =  pairing_dict[i]   
+    stock_A_close = pair[f"Close-{ticker1}"]
+    stock_B_close = pair[f"Close-{ticker2}"]
 
-        stock_A_close = pair.iloc[:,3]
-        stock_B_close = pair.iloc[:,8]
+    X = sm.add_constant(np.log(stock_A_close))
+    y = np.log(stock_B_close)
 
-        X = np.log(stock_A_close)
-        y = np.log(stock_B_close)
+    model_forward = sm.OLS(y, X).fit()
 
-        X = sm.add_constant(X)
-        
-        model_forward = sm.OLS(y, X).fit()
+    X_back = sm.add_constant(np.log(stock_B_close))
+    y_back = np.log(stock_A_close)
 
-        X_back = np.log(stock_B_close)
-        Y_back = np.log(stock_A_close)
+    model_backward = sm.OLS(y_back, X_back).fit()
 
-        X_back = sm.add_constant(X_back)
-
-        model_backward = sm.OLS(Y_back, X_back).fit()
-
-        models[i] = {
-            "forward": model_forward,
-            "backward": model_backward
-        }
-        """
-        print(f"======= {i} =======\n")
-        print(model_forward.summary())
-        print(model_backward.summary())
-        """
-
-    return models
+    return {
+        "forward": model_forward,
+        "backward": model_backward
+    }
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.stattools import coint
 from statsmodels.tsa.vector_ar.vecm import coint_johansen
-def stats_significane(dataframe,master_dict,resid,three):
-    ADF = pd.DataFrame()
-    EG = pd.DataFrame()
-    Johansen = pd.DataFrame()
-    for l in dataframe.index:
-        adf_stat = adfuller(resid[l])
-        adf_stat = pd.Series(data=adf_stat[0])
-        ADF = pd.concat([ADF, adf_stat])
+def stats_significance(residual_A, residual_B):
 
-        if l not in three:
-            eg_stat = coint(master_dict[l][f'Close-'+l[8:12]],master_dict[l][f'Close-'+l[13:17]])
-            joh = coint_johansen(master_dict[l][[f'Close-'+l[8:12],f'Close-'+l[13:17]]], det_order = 0, k_ar_diff = 0)
-            eg_stat = pd.Series(eg_stat[1])
-            joh = pd.DataFrame({"Trace": [joh.lr1[0]],"CVT": [joh.cvt[0,2]]})
-            EG = pd.concat([EG,eg_stat])
-            Johansen = pd.concat([Johansen,joh])
-        else:
-            eg_statv2 = coint(master_dict[l][f'Close-'+l[8:11]],master_dict[l][f'Close-'+l[12:16]])
-            johv2 = coint_johansen(master_dict[l][[f'Close-'+l[8:11],f'Close-'+l[12:16]]], det_order = 0, k_ar_diff = 0)
-            eg_statv2 = pd.Series(eg_statv2[1])
-            johv2 = pd.DataFrame({"Trace": [johv2.lr1[0]],"CVT": [johv2.cvt[0,2]]})
-            EG = pd.concat([EG,eg_statv2])
-            Johansen = pd.concat([Johansen,johv2])
-        
-    ADF.index = Pairing_names
-    EG.index = Pairing_names
-    Johansen.index = Pairing_names
-    dataframe['ADF_Statistic'] = ADF
-    dataframe['EG_Test'] = EG
-    dataframe['Johansen_Test_trace'] = Johansen.iloc[:,0]
-    dataframe['Johansen_Test_cvt'] = Johansen.iloc[:,1]
-    
-    dataframe = dataframe.sort_values(by=['ADF_Statistic','EG_Test','Johansen_Test_trace','Johansen_Test_cvt'],ascending=True)
-    
-    return dataframe
+    # ADF tests on individual price series
+    adf_A = adfuller(residual_A)
+    adf_B = adfuller(residual_B)
+
+    # Engle-Granger cointegration test
+    eg_test = coint(residual_A, residual_B)
+
+    # Johansen cointegration test
+    joh_data = pd.concat([residual_A, residual_B], axis=1).dropna()
+
+    joh_test = coint_johansen(
+        joh_data,
+        det_order=0,
+        k_ar_diff=0
+    )
+
+    return {
+        "ADF_A": {
+            "statistic": adf_A[0],
+            "p_value": adf_A[1]
+        },
+        "ADF_B": {
+            "statistic": adf_B[0],
+            "p_value": adf_B[1]
+        },
+        "Engle_Granger": {
+            "statistic": eg_test[0],
+            "p_value": eg_test[1]
+        },
+        "Johansen": {
+            "trace_statistic": joh_test.lr1[0],
+            "critical_value_5pct": joh_test.cvt[0, 1]
+        }
+    }
 from patsy import dmatrices
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.model_selection import train_test_split,KFold,cross_val_score
