@@ -167,23 +167,43 @@ def serve_frontend():
                     alert("Please enter both tickers.");
                     return;
                 }
-
+        
                 resultDiv.style.display = "block";
                 resultDiv.innerHTML = "<p style='text-align:center; color:#6c757d;'>Running model calculation...</p>";
-
+        
                 try {
                     const response = await fetch(`/predict?ticker1=${t1}&ticker2=${t2}`);
                     const data = await response.json();
                     
                     if (response.ok) {
-                        // Dynamically build a clean HTML table from the returned dictionary keys
                         let html = `<h4 style="margin:0 0 10px 0; color:#007bff; text-align:center;">Results for ${t1} & ${t2}</h4>`;
                         html += `<table class="result-table">`;
                         
+                        // Recursive helper function to handle nested objects or arrays
+                        function formatValue(val) {
+                            if (val === null || val === undefined) return 'N/A';
+                            
+                            // If the value is an object or array, build a nested sub-table
+                            if (typeof val === 'object') {
+                                let subHtml = `<table class="result-table" style="margin: 5px 0; background: #fff; border: 1px solid #ced4da;">`;
+                                for (const [subKey, subVal] of Object.entries(val)) {
+                                    subHtml += `<tr><th style="color: #6c757d; width: 40%;">${subKey}</th><td>${formatValue(subVal)}</td></tr>`;
+                                }
+                                subHtml += `</table>`;
+                                return subHtml;
+                            }
+                            
+                            // Format numbers nicely if they are floats
+                            if (typeof val === 'number' && !Number.isInteger(val)) {
+                                return val.toFixed(4);
+                            }
+                            
+                            return val;
+                        }
+        
+                        // Loop through the main response dictionary
                         for (const [key, value] of Object.entries(data)) {
-                            // Format nested or regular values gracefully
-                            let displayVal = typeof value === 'object' ? JSON.stringify(value) : value;
-                            html += `<tr><th>${key}</th><td>${displayVal}</td></tr>`;
+                            html += `<tr><th style="width: 35%;">${key}</th><td>${formatValue(value)}</td></tr>`;
                         }
                         
                         html += `</table>`;
