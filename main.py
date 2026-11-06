@@ -49,7 +49,7 @@ def load_finance_data(ticker1, ticker2):
     # Download both stocks
     df = yf.download(
         [ticker1, ticker2],
-        start="2020-01-01",
+        start="2025-11-01",
         end="2026-11-01"
     )
 
@@ -86,9 +86,6 @@ def load_finance_data(ticker1, ticker2):
 
     return processed_data
 
-price_data = load_finance_data('AMZN','TSLA')
-price_data
-
 
 # In[3]:
 
@@ -101,10 +98,6 @@ def run_pair_trading_model(ticker1, ticker2):
     # 2. Split data into training and testing periods
     train_data = masterdata[
         masterdata["Year"] <= 2025
-    ].copy()
-    
-    test_data = masterdata[
-        masterdata["Year"] == 2026
     ].copy()
     
     # 5. Run OLS and cointegration tests
@@ -139,21 +132,31 @@ def health_check():
 
 @app.get("/predict")
 def get_prediction(ticker1: str, ticker2: str):
-    
-    print("Received:", ticker1, ticker2)
 
-    result = run_pair_trading_model(ticker1, ticker2)
+    print("PREDICT: Request received", flush=True)
 
-    print("Result:", result)
+    try:
+        result = run_pair_trading_model(ticker1, ticker2)
 
-    return {
-        "status": "success",
-        "inputs": {
-            "ticker1": ticker1,
-            "ticker2": ticker2
-        },
-        "result": result
-    }
+        print("PREDICT: Model completed", flush=True)
+
+        return {
+            "status": "success",
+            "inputs": {
+                "ticker1": ticker1,
+                "ticker2": ticker2
+            },
+            "result": result
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 # In[ ]:
