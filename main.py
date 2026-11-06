@@ -217,7 +217,9 @@ def get_prediction(ticker1: str, ticker2: str):
         return {
             "ticker1": ticker1,
             "ticker2": ticker2, 
-            "status": "success", "prediction": "Sample Result"}
+            "status": "success", 
+            "prediction": result
+        }
 
     except Exception as e:
         import traceback
