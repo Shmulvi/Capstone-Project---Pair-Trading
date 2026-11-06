@@ -121,10 +121,83 @@ test = run_pair_trading_model(ticker1='TSLA',ticker2='AMZN')
 
 app = FastAPI(title="Pair Trading API", version="1.0")
 
-@app.get("/")
-def health_check():
-    return {"status": "online", "message": "API is running smoothly."}
-    
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pair Trading Predictor</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+            .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+            h2 { margin-bottom: 20px; color: #007bff; }
+            input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+            button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; }
+            button:hover { background-color: #0056b3; }
+            
+            /* Nicely formatted results styling */
+            #result { margin-top: 20px; text-align: left; display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef; }
+            .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+            .result-table th, .result-table td { padding: 8px 10px; border-bottom: 1px solid #dee2e6; font-size: 14px; }
+            .result-table th { text-align: left; color: #495057; }
+            .result-table td { text-align: right; font-weight: bold; color: #212529; }
+            .error-text { color: #dc3545; font-weight: bold; text-align: center; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2>Pair Trading Model</h2>
+            <input type="text" id="ticker1" placeholder="Ticker 1 (e.g., AAPL)">
+            <input type="text" id="ticker2" placeholder="Ticker 2 (e.g., MSFT)">
+            <button onclick="getPrediction()">Run Prediction</button>
+            <div id="result"></div>
+        </div>
+
+        <script>
+            async function getPrediction() {
+                const t1 = document.getElementById('ticker1').value.trim().toUpperCase();
+                const t2 = document.getElementById('ticker2').value.trim().toUpperCase();
+                const resultDiv = document.getElementById('result');
+                
+                if (!t1 || !t2) {
+                    alert("Please enter both tickers.");
+                    return;
+                }
+
+                resultDiv.style.display = "block";
+                resultDiv.innerHTML = "<p style='text-align:center; color:#6c757d;'>Running model calculation...</p>";
+
+                try {
+                    const response = await fetch(`/predict?ticker1=${t1}&ticker2=${t2}`);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Dynamically build a clean HTML table from the returned dictionary keys
+                        let html = `<h4 style="margin:0 0 10px 0; color:#007bff; text-align:center;">Results for ${t1} & ${t2}</h4>`;
+                        html += `<table class="result-table">`;
+                        
+                        for (const [key, value] of Object.entries(data)) {
+                            // Format nested or regular values gracefully
+                            let displayVal = typeof value === 'object' ? JSON.stringify(value) : value;
+                            html += `<tr><th>${key}</th><td>${displayVal}</td></tr>`;
+                        }
+                        
+                        html += `</table>`;
+                        resultDiv.innerHTML = html;
+                    } else {
+                        resultDiv.innerHTML = `<p class="error-text">Error: ${data.detail || "Unknown error"}</p>`;
+                    }
+                } catch (err) {
+                    resultDiv.innerHTML = `<p class="error-text">Failed to connect to backend server.</p>`;
+                }
+            }
+        </script>
+    </body>
+    </html>
+    """
 
 
 # In[167]:
@@ -141,13 +214,9 @@ def get_prediction(ticker1: str, ticker2: str):
         print("PREDICT: Model completed", flush=True)
 
         return {
-            "status": "success",
-            "inputs": {
-                "ticker1": ticker1,
-                "ticker2": ticker2
-            },
-            "result": result
-        }
+            "ticker1": ticker1,
+            "ticker2": ticker2, 
+            "status": "success", "prediction": "Sample Result"}
 
     except Exception as e:
         import traceback
