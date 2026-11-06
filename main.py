@@ -117,7 +117,7 @@ def run_pair_trading_model(ticker1, ticker2):
 test = run_pair_trading_model(ticker1='TSLA',ticker2='AMZN')
 
 
-# In[166]:
+# In[4]:
 
 
 app = FastAPI(title="Pair Trading API", version="1.0")
@@ -176,24 +176,22 @@ def serve_frontend():
                     const data = await response.json();
                     
                     if (response.ok) {
-                        let html = `<h4 style="margin:0 0 10px 0; color:#007bff; text-align:center;">Results for ${t1} & ${t2}</h4>`;
+                        let html = `<h4 style="margin:0 0 12px 0; color:#007bff; text-align:center;">Results for ${t1} & ${t2}</h4>`;
                         html += `<table class="result-table">`;
                         
-                        // Recursive helper function to handle nested objects or arrays
+                        // Recursive helper function for nested objects/sub-dictionaries
                         function formatValue(val) {
                             if (val === null || val === undefined) return 'N/A';
                             
-                            // If the value is an object or array, build a nested sub-table
                             if (typeof val === 'object') {
-                                let subHtml = `<table class="result-table" style="margin: 5px 0; background: #fff; border: 1px solid #ced4da;">`;
+                                let subHtml = `<table class="result-table" style="margin: 4px 0; width: 100%; background: #fff; border: 1px solid #dee2e6;">`;
                                 for (const [subKey, subVal] of Object.entries(val)) {
-                                    subHtml += `<tr><th style="color: #6c757d; width: 40%;">${subKey}</th><td>${formatValue(subVal)}</td></tr>`;
+                                    subHtml += `<tr><th style="color: #495057; width: 50%; padding: 6px 8px; border-bottom: 1px solid #f1f3f5;">${subKey}</th><td style="text-align: right; padding: 6px 8px; border-bottom: 1px solid #f1f3f5;">${formatValue(subVal)}</td></tr>`;
                                 }
                                 subHtml += `</table>`;
                                 return subHtml;
                             }
                             
-                            // Format numbers nicely if they are floats
                             if (typeof val === 'number' && !Number.isInteger(val)) {
                                 return val.toFixed(4);
                             }
@@ -201,9 +199,13 @@ def serve_frontend():
                             return val;
                         }
         
-                        // Loop through the main response dictionary
+                        // Loop through main response dictionary
                         for (const [key, value] of Object.entries(data)) {
-                            html += `<tr><th style="width: 35%;">${key}</th><td>${formatValue(value)}</td></tr>`;
+                            let formattedVal = formatValue(value);
+                            // If it's a nested object, make it span nicely or align to top
+                            let valAlign = (typeof value === 'object') ? 'text-align: left; vertical-align: top;' : 'text-align: right;';
+                            
+                            html += `<tr><th style="width: 30%; vertical-align: top; padding: 10px 8px;">${key}</th><td style="${valAlign} padding: 10px 8px;">${formattedVal}</td></tr>`;
                         }
                         
                         html += `</table>`;
@@ -216,6 +218,13 @@ def serve_frontend():
                 }
             }
         </script>
+        
+        <style>
+            /* Updated styles for clean alignment */
+            .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px; }
+            .result-table th { text-align: left; color: #343a40; font-weight: 600; border-bottom: 1px solid #dee2e6; }
+            .result-table td { color: #212529; border-bottom: 1px solid #dee2e6; }
+        </style>
     </body>
     </html>
     """
