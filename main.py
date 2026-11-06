@@ -201,11 +201,16 @@ def serve_frontend():
         
                         // Loop through main response dictionary
                         for (const [key, value] of Object.entries(data)) {
-                            let formattedVal = formatValue(value);
-                            // If it's a nested object, make it span nicely or align to top
-                            let valAlign = (typeof value === 'object') ? 'text-align: left; vertical-align: top;' : 'text-align: right;';
-                            
-                            html += `<tr><th style="width: 30%; vertical-align: top; padding: 10px 8px;">${key}</th><td style="${valAlign} padding: 10px 8px;">${formattedVal}</td></tr>`;
+                            if (typeof value === 'object' && value !== null) {
+                                // Drop nested objects/dictionaries down to a clean full-width row
+                                html += `<tr><td colspan="2" style="padding: 12px 8px; border-bottom: 1px solid #dee2e6;">`;
+                                html += `<div style="font-weight: 600; color: #343a40; margin-bottom: 8px; font-size: 15px;">${key}:</div>`;
+                                html += formatValue(value);
+                                html += `</td></tr>`;
+                            } else {
+                                // Standard side-by-side row for simple values like ticker names or status
+                                html += `<tr><th style="width: 35%; padding: 10px 8px; border-bottom: 1px solid #dee2e6;">${key}</th><td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #dee2e6; color: #212529; font-weight: bold;">${formatValue(value)}</td></tr>`;
+                            }
                         }
                         
                         html += `</table>`;
@@ -220,10 +225,9 @@ def serve_frontend():
         </script>
         
         <style>
-            /* Updated styles for clean alignment */
             .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px; }
-            .result-table th { text-align: left; color: #343a40; font-weight: 600; border-bottom: 1px solid #dee2e6; }
-            .result-table td { color: #212529; border-bottom: 1px solid #dee2e6; }
+            .result-table th { text-align: left; color: #343a40; font-weight: 600; }
+            .error-text { color: #dc3545; font-weight: bold; text-align: center; }
         </style>
     </body>
     </html>
