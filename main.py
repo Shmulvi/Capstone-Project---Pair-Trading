@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[3]:
 
 
 from main_script_ready import (load_finance_data,
@@ -35,6 +35,7 @@ from itertools import combinations
 import statsmodels.api as sm  
 import warnings
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 import uvicorn
 import inspect
 
