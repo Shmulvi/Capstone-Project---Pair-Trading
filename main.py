@@ -129,8 +129,8 @@ def run_pair_trading_model(ticker1, ticker2):
         color_class = "#dc3545" # Red
         
     return coin_test, {
-        "cointegrated": cointegration,
-        "checks_passed": sum(checks),
+        "cointegrated": bool(cointegration),
+        "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
         "color": color_class
     }
