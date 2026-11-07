@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[5]:
 
 
 from main_script_ready import (load_finance_data,
@@ -42,7 +42,7 @@ import inspect
 warnings.filterwarnings("ignore")
 
 
-# In[2]:
+# In[6]:
 
 
 def load_finance_data(ticker1, ticker2):
@@ -88,7 +88,7 @@ def load_finance_data(ticker1, ticker2):
     return processed_data
 
 
-# In[3]:
+# In[7]:
 
 
 def run_pair_trading_model(ticker1, ticker2):
@@ -108,13 +108,32 @@ def run_pair_trading_model(ticker1, ticker2):
     residuals_backward = ols_results["backward"].resid
 
     coin_test = stats_significance(residuals_forward,residuals_backward)
-    return coin_test
 
-
-# In[4]:
-
-
-test = run_pair_trading_model(ticker1='TSLA',ticker2='AMZN')
+    checks = [
+        coin_test['ADF_A']['p_value'] < 0.05,
+        coin_test['Engle_Granger']['p_value'] < 0.05,
+        coin_test['Johansen']['trace_statistic'] > coin_test['Johansen']['critical_value_5pct']
+    ]
+    
+    if sum(checks) >= 2:
+        cointegration = True
+        assessment_text = f"🟢 Strong Cointegration ({sum(checks)}/3 checks passed). Favorable pair for trading."
+        color_class = "#28a745" # Green
+    elif sum(checks) == 1:
+        cointegration = False
+        assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
+        color_class = "#d39e00" # Yellow
+    else:
+        cointegration = False
+        assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
+        color_class = "#dc3545" # Red
+        
+    return coin_test, {
+        "cointegrated": cointegration,
+        "checks_passed": sum(checks),
+        "assessment": assessment_text,
+        "color": color_class
+    }
 
 
 # In[4]:
@@ -198,9 +217,11 @@ def serve_frontend():
                             
                             return val;
                         }
-        
-                        // Loop through main response dictionary
+                    
+                        // Loop through main response dictionary (skip 'assessment' as it's rendered separately below)
                         for (const [key, value] of Object.entries(data)) {
+                            if (key === 'assessment') continue;
+                    
                             if (typeof value === 'object' && value !== null) {
                                 // Drop nested objects/dictionaries down to a clean full-width row
                                 html += `<tr><td colspan="2" style="padding: 12px 8px; border-bottom: 1px solid #dee2e6;">`;
@@ -214,13 +235,23 @@ def serve_frontend():
                         }
                         
                         html += `</table>`;
+                    
+                        // Render the assessment banner passed down directly from Python
+                        if (data.assessment) {
+                            // Dynamically choose the color based on checks_passed                     
+                            let color = data.assessment.color;
+                            html += `<div class="assessment-box" style="border-left-color: ${color};">`;
+                            html += `<strong>Model Assessment:</strong> <span style="color: ${color}; font-weight: bold;">${data.assessment.assessment}</span>`;
+                            html += `</div>`;
+                        }
+                    
                         resultDiv.innerHTML = html;
                     } else {
                         resultDiv.innerHTML = `<p class="error-text">Error: ${data.detail || "Unknown error"}</p>`;
                     }
-                } catch (err) {
+                }catch (err) {
+                    // <-- Added this back to handle network connection failures safely
                     resultDiv.innerHTML = `<p class="error-text">Failed to connect to backend server.</p>`;
-                }
             }
         </script>
         
@@ -243,7 +274,7 @@ def get_prediction(ticker1: str, ticker2: str):
     print("PREDICT: Request received", flush=True)
 
     try:
-        result = run_pair_trading_model(ticker1, ticker2)
+        result, cointegration_check = run_pair_trading_model(ticker1, ticker2)
 
         print("PREDICT: Model completed", flush=True)
 
@@ -251,7 +282,8 @@ def get_prediction(ticker1: str, ticker2: str):
             "ticker1": ticker1,
             "ticker2": ticker2, 
             "status": "success", 
-            "prediction": result
+            "prediction": result,
+            "Cointegration Check": cointegration_check
         }
 
     except Exception as e:
