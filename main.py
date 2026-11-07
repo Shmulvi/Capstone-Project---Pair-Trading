@@ -217,7 +217,7 @@ def serve_frontend():
                             
                             return val;
                         }
-                    
+        
                         // Loop through main response dictionary (skip 'assessment' as it's rendered separately below)
                         for (const [key, value] of Object.entries(data)) {
                             if (key === 'assessment') continue;
@@ -238,7 +238,6 @@ def serve_frontend():
                     
                         // Render the assessment banner passed down directly from Python
                         if (data.assessment) {
-                            // Dynamically choose the color based on checks_passed                     
                             let color = data.assessment.color;
                             html += `<div class="assessment-box" style="border-left-color: ${color};">`;
                             html += `<strong>Model Assessment:</strong> <span style="color: ${color}; font-weight: bold;">${data.assessment.assessment}</span>`;
@@ -249,16 +248,17 @@ def serve_frontend():
                     } else {
                         resultDiv.innerHTML = `<p class="error-text">Error: ${data.detail || "Unknown error"}</p>`;
                     }
-                }catch (err) {
-                    // <-- Added this back to handle network connection failures safely
+                } catch (err) {
                     resultDiv.innerHTML = `<p class="error-text">Failed to connect to backend server.</p>`;
-            }
+                }
+            } 
         </script>
         
         <style>
             .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px; }
             .result-table th { text-align: left; color: #343a40; font-weight: 600; }
             .error-text { color: #dc3545; font-weight: bold; text-align: center; }
+            .assessment-box { margin-top: 15px; padding: 10px 12px; background-color: #fff; border-left: 4px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; }
         </style>
     </body>
     </html>
