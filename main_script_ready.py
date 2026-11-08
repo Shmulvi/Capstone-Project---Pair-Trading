@@ -235,7 +235,7 @@ def time_series_features(pairs, coin_pairs):
         pairs[x]['lag3'] = pairs[x]['Z-score'].shift(3)
         pairs[x]['rolling_std_20'] = pairs[x]['Z-score'].rolling(window=20).std()
 
-    return pairs:
+    return pairs
 def create_sequences(X, y, seq_len, forecast):
     Xs, ys = [], []
     
