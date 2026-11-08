@@ -10,3 +10,4 @@ scipy
 patsy
 scikit-learn
 torch
+psutil
