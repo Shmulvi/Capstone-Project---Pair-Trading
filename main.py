@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[38]:
 
 
 from main_script_ready import (load_finance_data,
@@ -106,8 +106,10 @@ def run_pair_trading_model(ticker1, ticker2):
 
     residuals_forward = ols_results["forward"].resid
     residuals_backward = ols_results["backward"].resid
-
-    coin_test = stats_significance(residuals_forward,residuals_backward)
+    close_A = train_data[f"Close-{ticker1}"]
+    close_B = train_data[f"Close-{ticker2}"]
+    
+    coin_test = stats_significance(residuals_forward,residuals_backward,close_A,closeB)
 
     checks = [
         coin_test['ADF_A']['p_value'] < 0.05,

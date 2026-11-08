@@ -126,17 +126,17 @@ def ols_loop(pair, ticker1, ticker2):
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.stattools import coint
 from statsmodels.tsa.vector_ar.vecm import coint_johansen
-def stats_significance(residual_A, residual_B):
+def stats_significance(residual_A, residual_B, close_A, close_B):
 
     # ADF tests on individual price series
     adf_A = adfuller(residual_A)
     adf_B = adfuller(residual_B)
 
     # Engle-Granger cointegration test
-    eg_test = coint(residual_A, residual_B)
+    eg_test = coint(close_A, close_B)
 
     # Johansen cointegration test
-    joh_data = pd.concat([residual_A, residual_B], axis=1).dropna()
+    joh_data = pd.concat([close_A, closeB], axis=1).dropna()
 
     joh_test = coint_johansen(
         joh_data,
