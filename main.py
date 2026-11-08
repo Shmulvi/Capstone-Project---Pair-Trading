@@ -4,8 +4,7 @@
 # In[38]:
 
 
-from main_script_ready import (load_finance_data,
-    time_split_relocate,
+from main_script_ready import (time_split_relocate,
     merging_data,
     daily_returns,
     pairing,
@@ -18,19 +17,14 @@ from main_script_ready import (load_finance_data,
     time_series_features,
     create_sequences
 )
-import matplotlib.pyplot as plt
 import yfinance as yf
 import pandas as pd
-import seaborn as sns
 import numpy as np
 import datetime
-from itertools import combinations
-import statsmodels.api as sm  
 import warnings
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 import uvicorn
-import inspect
 
 warnings.filterwarnings("ignore")
 
@@ -85,9 +79,17 @@ def load_finance_data(ticker1, ticker2):
 
 
 def run_pair_trading_model(ticker1, ticker2):
-
-    # 1. Download and prepare stock data
+    import os
+    import psutil
+    
+    process = psutil.Process(os.getpid())
     masterdata = load_finance_data(ticker1, ticker2)
+    print(
+        f"Memory before download: "
+        f"{process.memory_info().rss / 1024**2:.2f} MB",
+        flush=True
+    )
+    # 1. Download and prepare stock data
     print("PREDICT: Data loaded", flush=True)
     # 2. Split data into training and testing periods
     train_data = masterdata[
@@ -122,12 +124,6 @@ def run_pair_trading_model(ticker1, ticker2):
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
-        mean, std, model = mean_std_2025(close_A, close_B)
-        print("PREDICT: Mean and std calculated", flush=True)
-        residuals_zscores_features(
-            train_data, close_A, close_B, model, mean, std
-        )
-        print("PREDICT: Z-scores calculated", flush=True)
     else:
         cointegration = False
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."

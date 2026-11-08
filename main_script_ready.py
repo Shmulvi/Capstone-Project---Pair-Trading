@@ -229,13 +229,13 @@ def trade_signals(df, threshold):
 
     return df
 def time_series_features(pairs, coin_pairs):
-    for x in coin_pairs:
-        pairs[x]['lag1'] = pairs[x]['Z-score'].shift(1)
+    for x in coin_pairs] = pairs[x]['Z-score'].shift(1)
         pairs[x]['lag2'] = pairs[x]['Z-score'].shift(2)
         pairs[x]['lag3'] = pairs[x]['Z-score'].shift(3)
         pairs[x]['rolling_std_20'] = pairs[x]['Z-score'].rolling(window=20).std()
 
-    return pairs
+    return pairs:
+        pairs[x]['lag1'
 def create_sequences(X, y, seq_len, forecast):
     Xs, ys = [], []
     
@@ -245,8 +245,6 @@ def create_sequences(X, y, seq_len, forecast):
         ys.append(y[i+seq_len:i+seq_len+forecast])
     
     return np.array(Xs), np.array(ys)
-import torch
-import torch.nn as nn
 def prepare_training_data(pairing_name, pairing_dict, seq_len, forecast):
 
     features = ['Z-score', 'lag1', 'lag2', 'lag3', 'rolling_std_20']
