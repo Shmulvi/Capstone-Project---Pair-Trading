@@ -38,7 +38,7 @@ def load_finance_data(ticker1, ticker2):
     df = yf.download(
         [ticker1, ticker2],
         start="2020-01-01",
-        end="2025-12-31"
+        end="2026-07-31"
     )
 
     # Reset index
@@ -95,7 +95,10 @@ def run_pair_trading_model(ticker1, ticker2):
     train_data = masterdata[
         masterdata["Year"] <= 2025
     ].copy()
-    
+
+    test_data = masterdata[
+        masterdata["Year"] == 2026
+    ].copy()
     # 5. Run OLS and cointegration tests
     ols_results = ols_loop(train_data, ticker1, ticker2)
 
@@ -118,7 +121,7 @@ def run_pair_trading_model(ticker1, ticker2):
         mean, std, model = mean_std_2025(close_A, close_B)
         print("PREDICT: Mean and std calculated", flush=True)
         residuals_zscores_features(
-            train_data, close_A, close_B, model, mean, std
+            test_data, close_A, close_B, model, mean, std
         )
         print("PREDICT: Z-scores calculated", flush=True)
     elif sum(checks) == 1:
@@ -131,8 +134,7 @@ def run_pair_trading_model(ticker1, ticker2):
     return coin_test, {
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
-        "assessment": assessment_text,
-        "Z-Scores": train_data['Z-score']
+        "assessment": assessment_text
     }
 
 

@@ -183,10 +183,10 @@ def mean_std_2025(close_A, close_B):
     return residuals_func.mean(), residuals_func.std(), model
 def unseen_residual(close_A, close_B, model):
     
-    X = np.log(close_A)
-    Y = np.log(close_B)
+    X = np.log(close_A.loc['2026-01-01':'2026-07-31'])
+    Y = np.log(close_B.loc['2026-01-01':'2026-07-31'])
 
-    X = sm.add_constant(X)
+    X = sm.add_constant(X, has_constant='add')
 
     predicted = model.predict(X)
     residuals = Y - predicted
