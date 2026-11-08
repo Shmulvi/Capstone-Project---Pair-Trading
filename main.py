@@ -42,7 +42,7 @@ import inspect
 warnings.filterwarnings("ignore")
 
 
-# In[6]:
+# In[34]:
 
 
 def load_finance_data(ticker1, ticker2):
@@ -50,7 +50,7 @@ def load_finance_data(ticker1, ticker2):
     # Download both stocks
     df = yf.download(
         [ticker1, ticker2],
-        start="2021-01-01",
+        start="2020-01-01",
         end="2025-12-31"
     )
 
