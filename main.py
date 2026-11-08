@@ -121,7 +121,7 @@ def run_pair_trading_model(ticker1, ticker2):
         cointegration = True
         assessment_text = f"🟢 Strong Cointegration ({sum(checks)}/3 checks passed). Favorable pair for trading."
         color_class = "#28a745" # Green
-        mean, stds, model = mean_std_2025(close_A, close_B)
+        mean, std, model = mean_std_2025(close_A, close_B)
         residuals_zscores_features(
             train_data, close_A, close_B, model, mean, std
         )
