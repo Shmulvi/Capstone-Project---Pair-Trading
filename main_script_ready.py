@@ -136,7 +136,7 @@ def stats_significance(residual_A, residual_B, close_A, close_B):
     eg_test = coint(close_A, close_B)
 
     # Johansen cointegration test
-    joh_data = pd.concat([close_A, closeB], axis=1).dropna()
+    joh_data = pd.concat([close_A, close_B], axis=1).dropna()
 
     joh_test = coint_johansen(
         joh_data,
