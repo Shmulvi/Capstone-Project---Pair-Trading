@@ -50,8 +50,8 @@ def load_finance_data(ticker1, ticker2):
     # Download both stocks
     df = yf.download(
         [ticker1, ticker2],
-        start="2025-11-01",
-        end="2026-11-01"
+        start="2021-01-01",
+        end="2025-12-31"
     )
 
     # Reset index
@@ -131,8 +131,7 @@ def run_pair_trading_model(ticker1, ticker2):
     return coin_test, {
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
-        "assessment": assessment_text,
-        "color": color_class
+        "assessment": assessment_text
     }
 
 
