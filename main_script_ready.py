@@ -167,10 +167,10 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.model_selection import train_test_split,KFold,cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
-def mean_std_2025(coin_pairs,pairing,year_data):
+def mean_std_2025(close_A, close_B):
     
-    X_25 = np.log(coin_pairs[f'{pairing}'].loc[f'{year_data}-01-01':f'{year_data}-12-31'][coin_pairs[f'{pairing}'].columns[3]])
-    Y_25 = np.log(coin_pairs[f'{pairing}'].loc[f'{year_data}-01-01':f'{year_data}-12-31'][coin_pairs[f'{pairing}'].columns[8]])
+    X_25 = np.log(close_A.loc['2025-01-01':'2025-12-31'])
+    Y_25 = np.log(close_B.loc['2025-01-01':'2025-12-31'])
 
     X_25 = sm.add_constant(X_25)
     
@@ -180,27 +180,23 @@ def mean_std_2025(coin_pairs,pairing,year_data):
     residuals_man = Y_25 - predicted
     residuals_func = model.resid
     
+    return residuals_func.mean(), residuals_func.std(), model
+def unseen_residual(close_A, close_B, model):
     
-    return residuals_func.mean(), residuals_func.std()
-def unseen_residual(coin_pairs,pairing,year_start_date, year_end_date):
-    
-    X_25 = np.log(coin_pairs[f'{pairing}'].loc[f'{year_start_date}-01-01':f'{year_end_date}-12-31'][coin_pairs[f'{pairing}'].columns[3]])
-    Y_25 = np.log(coin_pairs[f'{pairing}'].loc[f'{year_start_date}-01-01':f'{year_end_date}-12-31'][coin_pairs[f'{pairing}'].columns[8]])
+    X = np.log(close_A)
+    Y = np.log(close_B)
 
-    X_25 = sm.add_constant(X_25)
-    
-    model = sm.OLS(Y_25,X_25).fit()
+    X = sm.add_constant(X)
 
-    predicted = model.predict(X_25)
-    residuals = Y_25 - predicted
+    predicted = model.predict(X)
+    residuals = Y - predicted
 
     return residuals
-def residuals_zscores_features(main_dict, pairs, year_s, year_e, means, std):
-    for i in range(len(pairs)):
-        main_dict[pairs[i]]['Residuals'] = unseen_residual(main_dict,pairs[i],year_s, year_e)
-        main_dict[pairs[i]]['Z-score'] = main_dict[pairs[i]]['Residuals'].apply(lambda x: (x - means[i])/std[i])
+def residuals_zscores_features(pair_data, close_A, close_B, model, means, std):
+    pair_data['Residuals'] = unseen_residual(close_A, close_B, model)
+    pair_data['Z-score'] = pair_data['Residuals'].apply(lambda x: (x - means)/std)
 
-    return main_dict
+    return pair_data
 def trade_signals(df, threshold):
 
     position = None
