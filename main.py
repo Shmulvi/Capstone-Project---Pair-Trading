@@ -95,7 +95,7 @@ def run_pair_trading_model(ticker1, ticker2):
 
     # 1. Download and prepare stock data
     masterdata = load_finance_data(ticker1, ticker2)
-
+    print("PREDICT: Data loaded", flush=True)
     # 2. Split data into training and testing periods
     train_data = masterdata[
         masterdata["Year"] <= 2025
@@ -116,22 +116,25 @@ def run_pair_trading_model(ticker1, ticker2):
         coin_test['Engle_Granger']['p_value'] < 0.05,
         coin_test['Johansen']['trace_statistic'] > coin_test['Johansen']['critical_value_5pct']
     ]
-    
+    print("PREDICT: Cointegration completed", flush=True)
     if sum(checks) >= 2:
         cointegration = True
         assessment_text = f"🟢 Strong Cointegration ({sum(checks)}/3 checks passed). Favorable pair for trading."
-        color_class = "#28a745" # Green
         mean, std, model = mean_std_2025(close_A, close_B)
+        print("PREDICT: Mean and std calculated", flush=True)
         residuals_zscores_features(
             train_data, close_A, close_B, model, mean, std
         )
+        print("PREDICT: Z-scores calculated", flush=True)
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
-        mean, stds, model = mean_std_2025(close_A, close_B)
+        mean, std, model = mean_std_2025(close_A, close_B)
+        print("PREDICT: Mean and std calculated", flush=True)
         residuals_zscores_features(
             train_data, close_A, close_B, model, mean, std
         )
+        print("PREDICT: Z-scores calculated", flush=True)
     else:
         cointegration = False
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
