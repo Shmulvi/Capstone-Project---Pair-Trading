@@ -16,14 +16,7 @@ from main_script_ready import (load_finance_data,
     residuals_zscores_features,
     trade_signals,
     time_series_features,
-    create_sequences,
-    prepare_training_data, 
-    initialise_lstm,
-    test_evaluation,
-    lstm_trade_signals,
-    prepare_forecast_df,
-    evaluate_strategy,
-    compare_strategies
+    create_sequences
 )
 import matplotlib.pyplot as plt
 import yfinance as yf
