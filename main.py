@@ -113,7 +113,6 @@ def run_pair_trading_model(ticker1, ticker2):
         flush=True
     )
     # 1. Download and prepare pair
-_stock data
     print("PREDICT: Data loaded", flush=True)
     # 2. Split data into training and testing periods
     train_data = masterdata[
