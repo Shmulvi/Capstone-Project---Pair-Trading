@@ -11,6 +11,3 @@ patsy
 scikit-learn
 torch
 psutil
-io
-base64
-matplotlib
