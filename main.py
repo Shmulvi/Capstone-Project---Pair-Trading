@@ -173,6 +173,7 @@ def run_pair_trading_model(ticker1, ticker2):
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
     return {
+        "cointegration_tests": coint_test,
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
