@@ -172,7 +172,7 @@ def run_pair_trading_model(ticker1, ticker2):
         cointegration = False
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
-    return coin_test, {
+    return {
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
@@ -265,16 +265,14 @@ def serve_frontend():
         
                         // Loop through main response dictionary (skip 'assessment' as it's rendered separately below)
                         for (const [key, value] of Object.entries(data)) {
-                            if (key === 'assessment' || key === 'spread plot') continue;
-                    
+                            if (key === 'assessment' || key === 'spread plot' || key === 'prediction') continue;
+                        
                             if (typeof value === 'object' && value !== null) {
-                                // Drop nested objects/dictionaries down to a clean full-width row
                                 html += `<tr><td colspan="2" style="padding: 12px 8px; border-bottom: 1px solid #dee2e6;">`;
                                 html += `<div style="font-weight: 600; color: #343a40; margin-bottom: 8px; font-size: 15px;">${key}:</div>`;
                                 html += formatValue(value);
                                 html += `</td></tr>`;
                             } else {
-                                // Standard side-by-side row for simple values like ticker names or status
                                 html += `<tr><th style="width: 35%; padding: 10px 8px; border-bottom: 1px solid #dee2e6;">${key}</th><td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #dee2e6; color: #212529; font-weight: bold;">${formatValue(value)}</td></tr>`;
                             }
                         }
@@ -323,16 +321,15 @@ def get_prediction(ticker1: str, ticker2: str):
     print("PREDICT: Request received", flush=True)
 
     try:
-        result, cointegration_check = run_pair_trading_model(ticker1, ticker2)
+        result = run_pair_trading_model(ticker1, ticker2)
 
         print("PREDICT: Model completed", flush=True)
 
         return {
-            "ticker1": ticker1,
-            "ticker2": ticker2, 
+            "ticker1": {ticker1},
+            "ticker2": {ticker2}, 
             "status": "success", 
-            "prediction": result,
-            "Cointegration Check": cointegration_check
+            "prediction": result
         }
 
     except Exception as e:
