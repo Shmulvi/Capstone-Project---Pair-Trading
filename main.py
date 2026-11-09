@@ -124,7 +124,7 @@ def run_pair_trading_model(ticker1, ticker2):
             test_data, close_A, close_B, model, mean, std
         )
         print("PREDICT: Z-scores calculated", flush=True)
-        trading_signals = trading_signals(test_data, threshold=2)
+        trading_signals = trade_signals(test_data, threshold=2)
         signal_counts = trading_signals.groupby('Signal').size()
         signal_summary = signal_counts.drop(
             labels='Null',
