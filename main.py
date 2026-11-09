@@ -281,7 +281,7 @@ def serve_frontend():
                         }
                         if (data["spread plot"]) {
                             html += `<div style="margin-top: 15px; text-align: center;">`;
-                            html += `<img src="data:image/png;base64,${data.plot_image}" alt="Pair Spread Plot" style="width: 100%; border-radius: 4px; border: 1px solid #dee2e6;" />`;
+                            html += `<img src="data:image/png;base64,${data["spread plot"]}" alt="Pair Spread Plot" style="width: 100%; border-radius: 4px; border: 1px solid #dee2e6;" />`;
                             html += `</div>`;
                         }
                         resultDiv.innerHTML = html;
