@@ -142,7 +142,7 @@ def run_pair_trading_model(ticker1, ticker2):
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
-        "trading signals": signal_counts
+        "trading signals": signal_summary
     }
 
 
