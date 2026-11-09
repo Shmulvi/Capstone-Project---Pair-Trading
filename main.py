@@ -22,6 +22,9 @@ import pandas as pd
 import numpy as np
 import datetime
 import warnings
+import io
+import base64
+import matplotlib.pyplot as plt
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 import uvicorn
@@ -75,6 +78,26 @@ def load_finance_data(ticker1, ticker2):
     return processed_data
 
 
+# In[42]:
+
+
+def plot_spread(pair_data, ticker1, ticker2):
+    plt.figure(figsize=(12, 5))
+    plt.plot(pair_data.index, label="Date")
+    plt.plot(pair_data['Residuals'], label="Residuals")
+    plt.legend()
+    plt.title(f"Spread of Cointegrated Pair {ticker1} & {ticker2}")
+    plt.show()
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight", dpi=100)
+    buf.seek(0)
+    plot_base64 = base64.b64encode(buf.read()).decode("utf-8")
+    plt.close() # Crucial to free memory and prevent leaks on server
+    
+    return plot_base64
+
+
 # In[7]:
 
 
@@ -89,7 +112,8 @@ def run_pair_trading_model(ticker1, ticker2):
         f"{process.memory_info().rss / 1024**2:.2f} MB",
         flush=True
     )
-    # 1. Download and prepare stock data
+    # 1. Download and prepare pair
+_stock data
     print("PREDICT: Data loaded", flush=True)
     # 2. Split data into training and testing periods
     train_data = masterdata[
@@ -131,6 +155,7 @@ def run_pair_trading_model(ticker1, ticker2):
             for signal, count in signal_counts.items()
             if signal != 'Null'
         }
+        plot_str = plot_spread(test_data, ticker1, ticker2)
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
@@ -143,7 +168,8 @@ def run_pair_trading_model(ticker1, ticker2):
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
-        "trading signals": signal_summary
+        "trading signals": signal_summary,
+        "spread plot": plot_str
     }
 
 
@@ -231,7 +257,7 @@ def serve_frontend():
         
                         // Loop through main response dictionary (skip 'assessment' as it's rendered separately below)
                         for (const [key, value] of Object.entries(data)) {
-                            if (key === 'assessment') continue;
+                            if (key === 'assessment' || key === 'spread plot') continue;
                     
                             if (typeof value === 'object' && value !== null) {
                                 // Drop nested objects/dictionaries down to a clean full-width row
@@ -254,7 +280,11 @@ def serve_frontend():
                             html += `<strong>Model Assessment:</strong> <span style="color: ${color}; font-weight: bold;">${data.assessment.assessment}</span>`;
                             html += `</div>`;
                         }
-                    
+                        if (data["spread plot"]) {
+                            html += `<div style="margin-top: 15px; text-align: center;">`;
+                            html += `<img src="data:image/png;base64,${data.plot_image}" alt="Pair Spread Plot" style="width: 100%; border-radius: 4px; border: 1px solid #dee2e6;" />`;
+                            html += `</div>`;
+                        }
                         resultDiv.innerHTML = html;
                     } else {
                         resultDiv.innerHTML = `<p class="error-text">Error: ${data.detail || "Unknown error"}</p>`;
