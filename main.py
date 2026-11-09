@@ -124,7 +124,7 @@ def run_pair_trading_model(ticker1, ticker2):
             test_data, close_A, close_B, model, mean, std
         )
         print("PREDICT: Z-scores calculated", flush=True)
-        trading_signals = trade_signals(test_data, threshold=2)
+        trading_signals = trade_signals(test_data, threshold=1)
         signal_counts = trading_signals.groupby('Signal').size()
         signal_summary = {
             str(signal): int(count)
@@ -134,10 +134,11 @@ def run_pair_trading_model(ticker1, ticker2):
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
+        signal_summary = 'No trading signal required'
     else:
         cointegration = False
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
-    
+        signal_summary = 'No trading signal required'
     return coin_test, {
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
