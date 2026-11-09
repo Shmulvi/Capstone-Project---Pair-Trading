@@ -126,10 +126,11 @@ def run_pair_trading_model(ticker1, ticker2):
         print("PREDICT: Z-scores calculated", flush=True)
         trading_signals = trade_signals(test_data, threshold=2)
         signal_counts = trading_signals.groupby('Signal').size()
-        signal_summary = signal_counts.drop(
-            labels='Null',
-            errors='ignore'
-        ).to_dict()
+        signal_summary = {
+            str(signal): int(count)
+            for signal, count in signal_counts.items()
+            if signal != 'Null'
+        }
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
