@@ -82,18 +82,27 @@ def load_finance_data(ticker1, ticker2):
 
 
 def plot_spread(pair_data, ticker1, ticker2):
-    plt.figure(figsize=(12, 5))
-    plt.plot(pair_data.index, label="Date")
-    plt.plot(pair_data['Residuals'], label="Residuals")
-    plt.legend()
+    plt.figure(figsize=(10, 4))
+    
+    # Plot residuals cleanly against the dataframe index (dates)
+    plt.plot(pair_data.index, pair_data['Residuals'], label="Residuals", color="#007bff", linewidth=1.2)
+    
+    # Optional: Add a mean baseline reference line for context
+    plt.axhline(0, color='red', linestyle='--', alpha=0.6, label='Mean / Zero')
+    
+    plt.legend(loc="upper left")
     plt.title(f"Spread of Cointegrated Pair {ticker1} & {ticker2}")
-    plt.show()
-
+    plt.xlabel("Date")
+    plt.ylabel("Spread Residuals")
+    plt.grid(True, linestyle=":", alpha=0.5)
+    plt.tight_layout()
+    
+    # Save directly to an in-memory buffer (DO NOT call plt.show())
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches="tight", dpi=100)
     buf.seek(0)
     plot_base64 = base64.b64encode(buf.read()).decode("utf-8")
-    plt.close() # Crucial to free memory and prevent leaks on server
+    plt.close() # Crucial to free memory and prevent server leaks
     
     return plot_base64
 
