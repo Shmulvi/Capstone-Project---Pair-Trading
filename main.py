@@ -173,7 +173,7 @@ def run_pair_trading_model(ticker1, ticker2):
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
     return {
-        "cointegration_tests": coin_test,
+        "statistical_tests": coin_test,
         "cointegrated": bool(cointegration),
         "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
@@ -197,27 +197,26 @@ def serve_frontend():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pair Trading Predictor</title>
         <style>
-            body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-            .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+            body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+            .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 450px; text-align: center; }
             h2 { margin-bottom: 20px; color: #007bff; }
             input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
             button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; }
             button:hover { background-color: #0056b3; }
             
-            /* Nicely formatted results styling */
-            #result { margin-top: 20px; text-align: left; display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef; }
-            .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-            .result-table th, .result-table td { padding: 8px 10px; border-bottom: 1px solid #dee2e6; font-size: 14px; }
-            .result-table th { text-align: left; color: #495057; }
-            .result-table td { text-align: right; font-weight: bold; color: #212529; }
+            #result { margin-top: 20px; text-align: left; display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef; max-height: 500px; overflow-y: auto; }
+            .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px; }
+            .result-table th { text-align: left; color: #343a40; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #dee2e6; }
+            .result-table td { text-align: right; font-weight: bold; color: #212529; padding: 8px 10px; border-bottom: 1px solid #dee2e6; }
             .error-text { color: #dc3545; font-weight: bold; text-align: center; }
+            .assessment-box { margin-top: 15px; padding: 10px 12px; background-color: #fff; border-left: 4px solid #007bff; border-radius: 4px; font-size: 14px; text-align: left; color: #333; }
         </style>
     </head>
     <body>
         <div class="card">
             <h2>Pair Trading Model</h2>
-            <input type="text" id="ticker1" placeholder="Ticker 1 (e.g., AAPL)">
-            <input type="text" id="ticker2" placeholder="Ticker 2 (e.g., MSFT)">
+            <input type="text" id="ticker1" placeholder="Ticker 1 (e.g., ORCL)">
+            <input type="text" id="ticker2" placeholder="Ticker 2 (e.g., AVGO)">
             <button onclick="getPrediction()">Run Prediction</button>
             <div id="result"></div>
         </div>
@@ -263,36 +262,43 @@ def serve_frontend():
                             
                             return val;
                         }
-        
-                        // Loop through main response dictionary (skip 'assessment' as it's rendered separately below)
+                    
+                        // Single unified loop over all dictionary entries
                         for (const [key, value] of Object.entries(data)) {
-                            if (key === 'assessment' || key === 'spread plot' || key === 'prediction') continue;
-                        
+                            
+                            // 1. Render Assessment text cleanly as a full-width banner block
+                            if (key === 'assessment') {
+                                html += `<tr><td colspan="2" style="padding: 10px 4px; border-bottom: none;">`;
+                                html += `<div class="assessment-box">`;
+                                html += `<strong>Model Assessment:</strong> ${value}`;
+                                html += `</div>`;
+                                html += `</td></tr>`;
+                                continue;
+                            }
+                    
+                            // 2. Render the Matplotlib Base64 plot as a responsive image tag
+                            if (key === 'spread plot') {
+                                html += `<tr><td colspan="2" style="text-align: center; padding: 15px 4px; border-bottom: none;">`;
+                                html += `<div style="font-weight: 600; margin-bottom: 8px; color: #343a40;">Spread Residual Plot:</div>`;
+                                html += `<img src="data:image/png;base64,${value}" alt="Pair Spread Plot" style="width: 100%; border-radius: 4px; border: 1px solid #dee2e6;" />`;
+                                html += `</td></tr>`;
+                                continue;
+                            }
+                    
+                            // 3. Process all other keys (statistical_tests, cointegrated, checks_passed, trading signals)
                             if (typeof value === 'object' && value !== null) {
                                 html += `<tr><td colspan="2" style="padding: 12px 8px; border-bottom: 1px solid #dee2e6;">`;
-                                html += `<div style="font-weight: 600; color: #343a40; margin-bottom: 8px; font-size: 15px;">${key}:</div>`;
-                                html += formatValue(value);
+                                html += `<div style="font-weight: 600; color: #343a40; margin-bottom: 6px; text-transform: capitalize;">${key.replace('_', ' ')}:</div>`;
+                                html += `<div style="padding-left: 4px;">${formatValue(value)}</div>`;
                                 html += `</td></tr>`;
                             } else {
-                                html += `<tr><th style="width: 35%; padding: 10px 8px; border-bottom: 1px solid #dee2e6;">${key}</th><td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #dee2e6; color: #212529; font-weight: bold;">${formatValue(value)}</td></tr>`;
+                                html += `<tr><th>${key.replace('_', ' ')}</th><td>${formatValue(value)}</td></tr>`;
                             }
                         }
-                        
-                        html += `</table>`;
                     
-                        // Render the assessment banner passed down directly from Python
-                        if (data.assessment) {
-                            let color = data.assessment.color;
-                            html += `<div class="assessment-box" style="border-left-color: ${color};">`;
-                            html += `<strong>Model Assessment:</strong> <span style="color: ${color}; font-weight: bold;">${data.assessment.assessment}</span>`;
-                            html += `</div>`;
-                        }
-                        if (data[1] && data[1]["spread plot"]) {
-                            html += `<div style="margin-top: 15px; text-align: center;">`;
-                            html += `<img src="data:image/png;base64,${data[1]["spread plot"]}" alt="Pair Spread Plot" style="width: 100%; border-radius: 4px; border: 1px solid #dee2e6;" />`;
-                            html += `</div>`;
-                        }
+                        html += `</table>`;
                         resultDiv.innerHTML = html;
+                        
                     } else {
                         resultDiv.innerHTML = `<p class="error-text">Error: ${data.detail || "Unknown error"}</p>`;
                     }
@@ -301,13 +307,6 @@ def serve_frontend():
                 }
             } 
         </script>
-        
-        <style>
-            .result-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px; }
-            .result-table th { text-align: left; color: #343a40; font-weight: 600; }
-            .error-text { color: #dc3545; font-weight: bold; text-align: center; }
-            .assessment-box { margin-top: 15px; padding: 10px 12px; background-color: #fff; border-left: 4px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; }
-        </style>
     </body>
     </html>
     """
@@ -327,8 +326,8 @@ def get_prediction(ticker1: str, ticker2: str):
         print("PREDICT: Model completed", flush=True)
 
         return {
-            "ticker1": {ticker1},
-            "ticker2": {ticker2}, 
+            "ticker1": ticker1,
+            "ticker2": ticker2, 
             "status": "success", 
             **result
         }
