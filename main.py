@@ -104,7 +104,7 @@ def plot_spread(pair_data, ticker1, ticker2):
     plot_base64 = base64.b64encode(buf.read()).decode("utf-8")
     plt.close() # Crucial to free memory and prevent server leaks
     
-    return plot_base64
+    return pair_data, plot_base64
 
 
 # In[7]:
@@ -152,7 +152,7 @@ def run_pair_trading_model(ticker1, ticker2):
         assessment_text = f"🟢 Strong Cointegration ({sum(checks)}/3 checks passed). Favorable pair for trading."
         mean, std, model = mean_std_2025(close_A, close_B)
         print("PREDICT: Mean and std calculated", flush=True)
-        residuals_zscores_features(
+        test_data = residuals_zscores_features(
             test_data, close_A, close_B, model, mean, std
         )
         print("PREDICT: Z-scores calculated", flush=True)
