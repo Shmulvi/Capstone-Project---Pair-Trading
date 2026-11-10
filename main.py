@@ -107,6 +107,24 @@ def plot_spread(pair_data, ticker1, ticker2):
     return pair_data, plot_base64
 
 
+# In[ ]:
+
+
+def make_json_safe(val):
+    """Recursively convert NumPy scalars and objects to native Python types."""
+    if isinstance(val, (np.integer, np.int32, np.int64)):
+        return int(val)
+    elif isinstance(val, (np.floating, np.float32, np.float64)):
+        return float(val)
+    elif isinstance(val, np.bool_):
+        return bool(val)
+    elif isinstance(val, dict):
+        return {k: make_json_safe(v) for k, v in val.items()}
+    elif isinstance(val, (list, tuple)):
+        return [make_json_safe(v) for v in val]
+    return val
+
+
 # In[7]:
 
 
@@ -168,10 +186,12 @@ def run_pair_trading_model(ticker1, ticker2):
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
+        plot_str = "No plot"
     else:
         cointegration = False
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
+        plot_str = "No plot"
     return {
         "statistical_tests": coin_test,
         "cointegrated": bool(cointegration),
@@ -312,7 +332,7 @@ def serve_frontend():
     """
 
 
-# In[167]:
+# In[43]:
 
 
 @app.get("/predict")
@@ -325,12 +345,14 @@ def get_prediction(ticker1: str, ticker2: str):
 
         print("PREDICT: Model completed", flush=True)
 
-        return {
+        response_data = {
             "ticker1": ticker1,
             "ticker2": ticker2, 
             "status": "success", 
             **result
         }
+
+        return make_json_safe(response_data)
 
     except Exception as e:
         import traceback
