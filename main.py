@@ -164,6 +164,7 @@ def run_pair_trading_model(ticker1, ticker2):
             if signal != 'Null'
         }
         plot_str = plot_spread(test_data, ticker1, ticker2)
+        plot_str = base64.b64encode(buf.read()).decode('utf-8').replace('\n', '').replace('\r', '')
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
