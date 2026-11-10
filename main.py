@@ -280,6 +280,7 @@ def serve_frontend():
                     
                             // 2. Render the Matplotlib Base64 plot as a responsive image tag
                             if (key === 'spread plot') {
+                                console.log("Plot string length:", value ? value.length : "NULL OR EMPTY");
                                 html += `<tr><td colspan="2" style="text-align: center; padding: 15px 4px; border-bottom: none;">`;
                                 html += `<div style="font-weight: 600; margin-bottom: 8px; color: #343a40;">Spread Residual Plot:</div>`;
                                 html += `<img src="data:image/png;base64,${value}" alt="Pair Spread Plot" style="width: 100%; border-radius: 4px; border: 1px solid #dee2e6;" />`;
