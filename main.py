@@ -107,24 +107,6 @@ def plot_spread(pair_data, ticker1, ticker2):
     return pair_data, plot_base64
 
 
-# In[ ]:
-
-
-def make_json_safe(val):
-    """Recursively convert NumPy scalars and objects to native Python types."""
-    if isinstance(val, (np.integer, np.int32, np.int64)):
-        return int(val)
-    elif isinstance(val, (np.floating, np.float32, np.float64)):
-        return float(val)
-    elif isinstance(val, np.bool_):
-        return bool(val)
-    elif isinstance(val, dict):
-        return {k: make_json_safe(v) for k, v in val.items()}
-    elif isinstance(val, (list, tuple)):
-        return [make_json_safe(v) for v in val]
-    return val
-
-
 # In[7]:
 
 
@@ -343,16 +325,27 @@ def get_prediction(ticker1: str, ticker2: str):
     try:
         result = run_pair_trading_model(ticker1, ticker2)
 
-        print("PREDICT: Model completed", flush=True)
-
-        response_data = {
-            "ticker1": ticker1,
-            "ticker2": ticker2, 
-            "status": "success", 
-            **result
+        raw_coin_test = result.get("statistical_tests", {})
+        clean_coin_test = {
+            str(k): {
+                str(sub_k): (float(sub_v) if isinstance(sub_v, (int, float, np.number)) else str(sub_v))
+                for sub_k, sub_v in sub_dict.items()
+            } if isinstance(sub_dict, dict) else (float(sub_dict) if isinstance(sub_dict, (int, float, np.number)) else str(sub_dict))
+            for k, sub_dict in raw_coin_test.items()
         }
 
-        return make_json_safe(response_data)
+        # Explicitly cast every return field to a safe native Python type
+        return {
+            "ticker1": str(ticker1),
+            "ticker2": str(ticker2),
+            "status": "success",
+            "statistical_tests": clean_coin_test,
+            "cointegrated": bool(result.get("cointegrated", False)),
+            "checks_passed": int(result.get("checks_passed", 0)),
+            "assessment": str(result.get("assessment", "")),
+            "trading signals": str(result.get("trading signals", "")),
+            "spread plot": str(result.get("spread plot", ""))
+        }
 
     except Exception as e:
         import traceback
