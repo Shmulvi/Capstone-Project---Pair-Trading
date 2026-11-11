@@ -372,10 +372,15 @@ def get_prediction(ticker1: str, ticker2: str):
     try:
         result = run_pair_trading_model(ticker1, ticker2)
         plot = result.get("spread plot", "")
-
-        print("Endpoint plot type:", type(plot), flush=True)
-        print("Endpoint plot length:", len(plot), flush=True)
-        print("Endpoint plot prefix:", plot[:30], flush=True)
+        signals = results.get("trading signals", {})
+        if isinstance(signals, dict):
+            signals = {
+                str(k): int(v)
+                for k, v in signals.items()
+            }
+        else:
+            signals = str(signals)
+        
         raw_coin_test = result.get("statistical_tests", {})
         clean_coin_test = {
             str(k): {
@@ -394,7 +399,7 @@ def get_prediction(ticker1: str, ticker2: str):
             "cointegrated": bool(result.get("cointegrated", False)),
             "checks_passed": int(result.get("checks_passed", 0)),
             "assessment": str(result.get("assessment", "")),
-            "trading signals": str(result.get("trading signals", "")),
+            "trading signals": signals,
             "spread plot": str(result.get("spread plot", ""))
         }
 
