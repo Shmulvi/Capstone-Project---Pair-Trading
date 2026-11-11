@@ -185,11 +185,13 @@ def run_pair_trading_model(ticker1, ticker2):
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
         plot_str = "No plot"
+        spread_data = None
     else:
         cointegration = False
         assessment_text = f"🔴 Weak / Inconclusive Cointegration ({sum(checks)}/3 checks passed). Does not meet criteria."
         signal_summary = 'No trading signal required'
         plot_str = "No plot"
+        spread_data = None
     return {
         "statistical_tests": coin_test,
         "cointegrated": bool(cointegration),
@@ -304,8 +306,35 @@ def serve_frontend():
                                 html += `</td></tr>`;
                                 continue;
                             }
-                    
-                            // 3. Process all other keys (statistical_tests, cointegrated, checks_passed, trading signals)
+
+                            if (key === 'trading signals' && typeof value === 'object' && value !== null) {
+
+                                html += `<tr><td colspan="2" style="padding: 12px 4px;">`;
+                                html += `<div style="font-weight:600; margin-bottom:10px;">Trading Signal Summary</div>`;
+                                html += `<table class="result-table">`;
+                            
+                                const signalLabels = {
+                                    'Long Enter': 'Long Entries',
+                                    'Long Exit': 'Long Exits',
+                                    'Short Enter': 'Short Entries',
+                                    'Short Exit': 'Short Exits'
+                                };
+                            
+                                for (const [signal, count] of Object.entries(value)) {
+                                    html += `
+                                        <tr>
+                                            <th>${signalLabels[signal] || signal}</th>
+                                            <td>${count}</td>
+                                        </tr>
+                                    `;
+                                }
+                            
+                                html += `</table></td></tr>`;
+                            
+                                continue;
+                            }
+                            
+                            // 4. Generic object handling
                             if (typeof value === 'object' && value !== null) {
                                 html += `<tr><td colspan="2" style="padding: 12px 8px; border-bottom: 1px solid #dee2e6;">`;
                                 html += `<div style="font-weight: 600; color: #343a40; margin-bottom: 6px; text-transform: capitalize;">${key.replace('_', ' ')}:</div>`;
