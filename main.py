@@ -85,7 +85,7 @@ def plot_spread(pair_data, ticker1, ticker2):
     plt.figure(figsize=(10, 4))
     
     # Plot residuals cleanly against the dataframe index (dates)
-    plt.plot(pair_data.index, pair_data['Residuals'], label="Residuals", color="#007bff", linewidth=1.2)
+    plt.plot(pair_data.index, pair_data['Z-Scores'], label="Z-Scores", color="#007bff", linewidth=1.2)
     
     # Optional: Add a mean baseline reference line for context
     plt.axhline(0, color='red', linestyle='--', alpha=0.6, label='Mean / Zero')
@@ -93,7 +93,7 @@ def plot_spread(pair_data, ticker1, ticker2):
     plt.legend(loc="upper left")
     plt.title(f"Spread of Cointegrated Pair {ticker1} & {ticker2}")
     plt.xlabel("Date")
-    plt.ylabel("Spread Residuals")
+    plt.ylabel("Standardised Z-Scores")
     plt.grid(True, linestyle=":", alpha=0.5)
     plt.tight_layout()
     
@@ -153,9 +153,6 @@ def run_pair_trading_model(ticker1, ticker2):
         cointegration = True
         assessment_text = f"🟢 Strong Cointegration ({sum(checks)}/3 checks passed). Favorable pair for trading."
         mean, std, model = mean_std_2025(close_A, close_B)
-        print("Test data rows:", len(test_data))
-        print("AAPL missing:", close_A_test.isna().sum())
-        print("TSLA missing:", close_B_test.isna().sum())
         test_data = residuals_zscores_features(
             test_data, close_A_test, close_B_test, model, mean, std
         )
