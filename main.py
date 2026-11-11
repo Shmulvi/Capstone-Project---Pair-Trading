@@ -85,7 +85,7 @@ def plot_spread(pair_data, ticker1, ticker2):
     plt.figure(figsize=(10, 4))
     
     # Plot residuals cleanly against the dataframe index (dates)
-    plt.plot(pair_data.index, pair_data['Z-Scores'], label="Z-Scores", color="#007bff", linewidth=1.2)
+    plt.plot(pair_data.index, pair_data['Z-score'], label="Z-Scores", color="#007bff", linewidth=1.2)
     
     # Optional: Add a mean baseline reference line for context
     plt.axhline(0, color='red', linestyle='--', alpha=0.6, label='Mean / Zero')
