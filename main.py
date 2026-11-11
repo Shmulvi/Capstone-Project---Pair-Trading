@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[38]:
+# In[1]:
 
 
 from main_script_ready import (time_split_relocate,
@@ -32,7 +32,7 @@ import uvicorn
 warnings.filterwarnings("ignore")
 
 
-# In[34]:
+# In[2]:
 
 
 def load_finance_data(ticker1, ticker2):
@@ -78,7 +78,7 @@ def load_finance_data(ticker1, ticker2):
     return processed_data
 
 
-# In[42]:
+# In[3]:
 
 
 def plot_spread(pair_data, ticker1, ticker2):
@@ -107,7 +107,7 @@ def plot_spread(pair_data, ticker1, ticker2):
     return plot_base64
 
 
-# In[7]:
+# In[48]:
 
 
 def run_pair_trading_model(ticker1, ticker2):
@@ -137,7 +137,9 @@ def run_pair_trading_model(ticker1, ticker2):
     residuals_forward = ols_results["forward"].resid
     residuals_backward = ols_results["backward"].resid
     close_A = train_data[f"Close-{ticker1}"]
+    close_A_test = test_data[f"Close-{ticker1}"]
     close_B = train_data[f"Close-{ticker2}"]
+    close_B_test = test_data[f"Close-{ticker2}"]
     
     coin_test = stats_significance(residuals_forward,residuals_backward,close_A,close_B)
 
@@ -151,11 +153,14 @@ def run_pair_trading_model(ticker1, ticker2):
         cointegration = True
         assessment_text = f"🟢 Strong Cointegration ({sum(checks)}/3 checks passed). Favorable pair for trading."
         mean, std, model = mean_std_2025(close_A, close_B)
-        print("PREDICT: Mean and std calculated", flush=True)
+        print("Test data rows:", len(test_data))
+        print("AAPL missing:", close_A_test.isna().sum())
+        print("TSLA missing:", close_B_test.isna().sum())
         test_data = residuals_zscores_features(
-            test_data, close_A, close_B, model, mean, std
+            test_data, close_A_test, close_B_test, model, mean, std
         )
-        print("PREDICT: Z-scores calculated", flush=True)
+        print("Residuals missing:", test_data['Residuals'].isna().sum())
+        print("Z-scores missing:", test_data['Z-score'].isna().sum())
         trading_signals = trade_signals(test_data, threshold=1)
         signal_counts = trading_signals.groupby('Signal').size()
         signal_summary = {
@@ -164,6 +169,20 @@ def run_pair_trading_model(ticker1, ticker2):
             if signal != 'Null'
         }
         plot_str = plot_spread(test_data, ticker1, ticker2)
+        spread_data = [
+            {
+                "date": date.strftime("%Y-%m-%d"),
+                "residual": float(residual),
+                "z_score": float(zscore),
+                "signal": str(signal)
+            }
+            for date, residual, zscore, signal in zip(
+                test_data.index,
+                test_data["Residuals"],
+                test_data["Z-score"],
+                test_data["Signal"]
+            )
+        ]
     elif sum(checks) == 1:
         cointegration = False
         assessment_text = f"🟡 Moderate Support ({sum(checks)}/3 checks passed). Does not meet criteria."
@@ -180,7 +199,8 @@ def run_pair_trading_model(ticker1, ticker2):
         "checks_passed": int(sum(checks)),
         "assessment": assessment_text,
         "trading signals": signal_summary,
-        "spread plot": plot_str
+        "spread plot": plot_str,
+        "spread data": spread_data
     }
 
 
@@ -325,7 +345,11 @@ def get_prediction(ticker1: str, ticker2: str):
 
     try:
         result = run_pair_trading_model(ticker1, ticker2)
+        plot = result.get("spread plot", "")
 
+        print("Endpoint plot type:", type(plot), flush=True)
+        print("Endpoint plot length:", len(plot), flush=True)
+        print("Endpoint plot prefix:", plot[:30], flush=True)
         raw_coin_test = result.get("statistical_tests", {})
         clean_coin_test = {
             str(k): {
