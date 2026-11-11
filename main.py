@@ -372,7 +372,7 @@ def get_prediction(ticker1: str, ticker2: str):
     try:
         result = run_pair_trading_model(ticker1, ticker2)
         plot = result.get("spread plot", "")
-        signals = results.get("trading signals", {})
+        signals = result.get("trading signals", {})
         if isinstance(signals, dict):
             signals = {
                 str(k): int(v)
